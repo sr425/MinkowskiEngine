@@ -40,6 +40,7 @@ Additional arguments:
   --blas_library_dirs=<comma_separated_values> : additional library dirs. Only
       activated when --blas=<value> is set.
 """
+
 import sys
 
 if sys.version_info < (3, 6):
@@ -172,6 +173,8 @@ if sys.platform == "win32":
         CC_FLAGS += ["/sdl"]
     else:
         CC_FLAGS += ["/sdl", "/permissive-"]
+elif "darwin" in platform:
+    CC_FLAGS += ["-Xpreprocessor", "-fopenmp=libomp"]
 else:
     CC_FLAGS += ["-fopenmp"]
 
@@ -195,7 +198,11 @@ if not (BLAS is False):  # False only when not set, str otherwise
     if not (BLAS_INCLUDE_DIRS is False):
         include_dirs += BLAS_INCLUDE_DIRS
     if not (BLAS_LIBRARY_DIRS is False):
-        extra_link_args += [f"-Wl,-rpath,{BLAS_LIBRARY_DIRS}"]
+        if "darwin" in platform:
+            blas_dir = BLAS_LIBRARY_DIRS[0]
+            extra_link_args += [f"-Wl,-rpath,{blas_dir}", "-L", blas_dir]
+        else:
+            extra_link_args += [f"-Wl,-rpath,{BLAS_LIBRARY_DIRS}"]
 else:
     # find the default BLAS library
     import numpy.distutils.system_info as sysinfo
@@ -313,6 +320,7 @@ ext_modules = [
         sources=[*[str(SRC_PATH / src_file) for src_file in SRC_FILES], *BIND_FILES],
         extra_compile_args={"cxx": CC_FLAGS, "nvcc": NVCC_FLAGS},
         libraries=libraries,
+        extra_link_args=extra_link_args,
     ),
 ]
 
@@ -324,6 +332,7 @@ setup(
     packages=["MinkowskiEngine", "MinkowskiEngine.utils", "MinkowskiEngine.modules"],
     package_dir={"MinkowskiEngine": "./MinkowskiEngine"},
     ext_modules=ext_modules,
+    extra_link_args=extra_link_args,
     include_dirs=[str(SRC_PATH), str(SRC_PATH / "3rdparty"), *include_dirs],
     cmdclass={"build_ext": BuildExtension.with_options(use_ninja=True)},
     author="Christopher Choy",

@@ -76,6 +76,13 @@ If you cannot find a relevant problem, please report the issue on [the github is
 - [Python](https://github.com/NVIDIA/MinkowskiEngine#system-python) installation
 - [Docker](https://github.com/NVIDIA/MinkowskiEngine#docker) installation
 
+### Build
+
+Build command:
+
+```
+python setup.py bdist_wheel --cpu_only --blas=openblas --blas_library_dirs=/opt/homebrew/opt/openblas/lib --blas_include_dirs=/opt/homebrew/opt/openblas/include
+```
 
 ### Pip
 
